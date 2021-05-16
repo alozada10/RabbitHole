@@ -80,7 +80,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'HOST': 'rabbithole.ckwfizduxg1c.us-east-2.rds.amazonaws.com',
         'USER': 'rabbit_hole_role',
-        'PASSWORD': 'rabbithole1206533',
+        'PASSWORD': credentials.POSTGRES_PASSWORD,
         'NAME': 'postgres',
         'PORT': 5439,
 
