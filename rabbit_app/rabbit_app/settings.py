@@ -79,7 +79,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'HOST': 'rabbithole.ckwfizduxg1c.us-east-2.rds.amazonaws.com',
-        'USER': 'rabbit_hole_role',
+        'USER': POSTGRES_USER,
         'PASSWORD': POSTGRES_PASSWORD,
         'NAME': 'postgres',
         'PORT': 5439,
