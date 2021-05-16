@@ -10,7 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
-import credentials
+from .credentials import *
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -21,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = credentials.DJANGO_KEY
+SECRET_KEY = DJANGO_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -80,7 +80,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'HOST': 'rabbithole.ckwfizduxg1c.us-east-2.rds.amazonaws.com',
         'USER': 'rabbit_hole_role',
-        'PASSWORD': credentials.POSTGRES_PASSWORD,
+        'PASSWORD': POSTGRES_PASSWORD,
         'NAME': 'postgres',
         'PORT': 5439,
 

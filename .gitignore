@@ -131,4 +131,4 @@ dmypy.json
 .pyre/
 
 # Credentials
-credentials.py
+rabbit_app/rabbit_app/credentials.py
