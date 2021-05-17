@@ -14,7 +14,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+
 lib64/
 parts/
 sdist/
@@ -132,3 +132,5 @@ dmypy.json
 
 # Credentials
 rabbit_app/rabbit_app/credentials.py
+
+analytics
