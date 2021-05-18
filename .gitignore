@@ -133,4 +133,6 @@ dmypy.json
 # Credentials
 rabbit_app/rabbit_app/credentials.py
 
+# Folders
 analytics
+data
