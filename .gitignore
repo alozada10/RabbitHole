@@ -135,4 +135,4 @@ rabbit_app/rabbit_app/credentials.py
 
 # Folders
 analytics
-data
+rabbit_app/data
