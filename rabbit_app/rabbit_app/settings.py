@@ -78,11 +78,11 @@ WSGI_APPLICATION = 'rabbit_app.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'HOST': 'rabbithole.ckwfizduxg1c.us-east-2.rds.amazonaws.com',
+        'HOST': POSTGRES_HOST,
         'USER': POSTGRES_USER,
         'PASSWORD': POSTGRES_PASSWORD,
-        'NAME': 'postgres',
-        'PORT': 5439,
+        'NAME': POSTGRES_DATABASE,
+        'PORT': POSTGRES_PORT,
 
     }
 }

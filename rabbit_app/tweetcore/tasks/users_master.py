@@ -5,7 +5,7 @@ from datetime import datetime
 def get_user_info(configuration: dict = None,
                   tw_id: str = None,
                   screen_name: str = None,
-                  fields: list = None):
+                  fields: list = None) -> dict:
     if fields is None:
         fields = ['id_str', 'name', 'screen_name', 'protected', 'created_at', 'verified']
 
@@ -19,5 +19,19 @@ def get_user_info(configuration: dict = None,
                                 include_entities=True)
     values = response._json
     result = {i: values[i] for i in fields}
-    result['created_at'] = datetime.strptime(result['created_at'], '%a %b %d %H:%M:%S +0000 %Y')
+    if 'created_at' in fields:
+        result['created_at'] = datetime.strptime(result['created_at'], '%a %b %d %H:%M:%S +0000 %Y')
+    else:
+        pass
     return result
+
+
+def get_user_followers(configuration: dict = None,
+                       tw_id: str = None,
+                       cursor: int = -1):
+    api = tc.get_client(configuration=configuration)
+
+    followers_ids = api.followers_ids(user_id=tw_id,
+                                      cursor=cursor)
+
+    return followers_ids

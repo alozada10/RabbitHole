@@ -1,7 +1,9 @@
 import pandas as pd
 from tweetcore.tasks import users_master
+import warnings
 import django
 
+warnings.filterwarnings("error")
 django.setup()
 
 
@@ -19,16 +21,24 @@ def export_user(configuration: dict = None,
     user.name = user_info['name']
     user.protected = user_info['protected']
     user.verified = user_info['verified']
-    user.save()
+    try:
+        user.save()
+    except RuntimeWarning as error:
+        if 'DateTimeField' in error.args[0]:
+            pass
+        else:
+            raise
+    print(f'--- {screen_name} exported---\n\n')
 
 
 if __name__ == "__main__":
     from tweetcore import credentials_refactor
 
     conf = credentials_refactor.return_credentials()
-    followers = pd.read_csv('data/followers.csv')
+    accounts = pd.read_csv('data/main_accounts.csv')
 
-    for i in range(followers.shape[0]):
-        screen_name = followers[followers.index == i]["followers"].values[0]
+    for i in range(accounts.shape[0]):
+        screen = accounts[accounts.index == i]["tw_screen_name"].values[0]
+        print(f'--- {screen} ---')
         export_user(configuration=conf,
-                    screen_name=screen_name)
+                    screen_name=screen)
