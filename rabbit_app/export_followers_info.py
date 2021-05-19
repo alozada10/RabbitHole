@@ -1,6 +1,7 @@
+import tweepy as tp
 import time
 from tweetcore.tasks import users_master
-from tweetcore.lib.postgres_target import download_data, upload_data
+from tweetcore.lib.postgres_target import download_data
 import django
 
 django.setup()
@@ -57,9 +58,17 @@ if __name__ == "__main__":
     conf = credentials_refactor.return_credentials()
 
     while True:
-        sentinel = export_follower_info(configuration=conf)
-        print(f"--- %s minutes ---" % round((time.time() - start_time) / 60, 2))
-
+        try:
+            sentinel = export_follower_info(configuration=conf)
+            print(f"--- %s minutes ---" % round((time.time() - start_time) / 60, 2))
+        except tp.TweepError as error:
+            if error.args[0][0]['code'] == 63:
+                msg = error.args[0][0]['message']
+                print(f'--- {msg} ---')
+                sentinel = -1
+                pass
+            else:
+                raise
         if sentinel == 0:
             break
         else:
