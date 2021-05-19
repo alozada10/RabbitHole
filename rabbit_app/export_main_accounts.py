@@ -1,3 +1,4 @@
+import time
 import pandas as pd
 from tweetcore.tasks import users_master
 import warnings
@@ -21,17 +22,11 @@ def export_user(configuration: dict = None,
     user.name = user_info['name']
     user.protected = user_info['protected']
     user.verified = user_info['verified']
-    try:
-        user.save()
-    except RuntimeWarning as error:
-        if 'DateTimeField' in error.args[0]:
-            pass
-        else:
-            raise
-    print(f'--- {screen_name} exported---\n\n')
+    user.save()
 
 
 if __name__ == "__main__":
+    start_time = time.time()
     from tweetcore import credentials_refactor
 
     conf = credentials_refactor.return_credentials()
@@ -42,3 +37,5 @@ if __name__ == "__main__":
         print(f'--- {screen} ---')
         export_user(configuration=conf,
                     screen_name=screen)
+        print(f"--- %s minutes ---" % round((time.time() - start_time) / 60, 2))
+        print(f'--- {screen} exported---\n\n')
