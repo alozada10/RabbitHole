@@ -25,6 +25,14 @@ def export_user(configuration: dict = None,
     user.save()
 
 
+def export_follower_init(tw_id: str = None):
+
+    from tweetcore.models import TwUsers
+    user = TwUsers()
+    user.tw_id = tw_id
+    user.save()
+
+
 if __name__ == "__main__":
     start_time = time.time()
     from tweetcore import credentials_refactor

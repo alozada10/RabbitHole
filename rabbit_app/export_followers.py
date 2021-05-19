@@ -2,7 +2,7 @@ from datetime import datetime
 import pandas as pd
 import time
 from tweetcore.tasks import users_master
-from export_main_accounts import export_user
+from export_main_accounts import export_follower_init
 from tweetcore.lib.postgres_target import download_data, upload_data
 import django
 
@@ -15,15 +15,13 @@ def check_user_exists(tw_id: str = None) -> bool:
     return not count == 0
 
 
-def export_follower(configuration: dict = None,
-                    tw_id: str = None,
+def export_follower(tw_id: str = None,
                     following_tw_id: str = None,
                     position: int = None,
                     date: datetime.date = datetime.today().date()):
     from tweetcore.models import TwUsers, Followers
     if not check_user_exists(tw_id=tw_id):
-        export_user(configuration=configuration,
-                    tw_id=tw_id)
+        export_follower_init(tw_id=tw_id)
         pass
     else:
         pass
@@ -59,8 +57,7 @@ def update_followers(configuration: dict = None,
         for j in range(len(followers)):
             follower_id = str(followers[j])
             position = start - sentinel
-            export_follower(configuration=configuration,
-                            tw_id=follower_id,
+            export_follower(tw_id=follower_id,
                             following_tw_id=tw_id,
                             position=position)
             sentinel += 1
@@ -94,12 +91,10 @@ def update_followers(configuration: dict = None,
             for j in range(len(new_followers)):
                 follower_id = str(new_followers[j])
                 position = start - sentinel
-                export_follower(configuration=configuration,
-                                tw_id=follower_id,
+                export_follower(tw_id=follower_id,
                                 following_tw_id=tw_id,
                                 position=position)
                 sentinel += 1
-
             print(f'--- Added {str(sentinel)} followers ---')
         else:
             print('--- No new followers ---')

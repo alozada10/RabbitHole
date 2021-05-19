@@ -93,8 +93,6 @@ def reconstruct_follower_history(configuration: dict = None,
     if next_batch[1] == 0:
         return temp_followers
     else:
-        print('--- batch ---')
-        print('--- latency O.K ---')
         return temp_followers + reconstruct_follower_history(configuration=configuration,
                                                              tw_id=tw_id,
                                                              cursor=next_batch[1],
