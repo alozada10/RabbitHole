@@ -3,7 +3,7 @@ import pandas as pd
 import time
 from tweetcore.tasks import users_master
 from export_main_accounts import export_follower_init
-from tweetcore.lib.postgres_target import download_data, upload_data
+from tweetcore.lib.postgres_target import download_data, upload_data, execute_query
 import django
 
 django.setup()
@@ -36,18 +36,29 @@ def export_follower(tw_id: str = None,
 
 def update_followers(configuration: dict = None,
                      tw_id: str = None):
-    query_check = f'''
-                    select count(0) as count
-                    from tweetcore_followers
-                    where following_tw_id = '{tw_id}'
-                    '''
-
-    rows = download_data.pandas_df_from_postgre_query(configuration=configuration,
-                                                      query=query_check)["count"].values[0]
     start = users_master.get_user_number_followers(configuration=configuration,
                                                    tw_id=tw_id)
-    if rows == 0:
+    query_check = f'''
+                    select *
+                    from tweetcore_metafollowers
+                    where tw_user_id = (select id
+                                        from tweetcore_twusers
+                                        where tw_id = '{tw_id}')
+                    '''
+
+    exists_check = download_data.pandas_df_from_postgre_query(configuration=configuration,
+                                                              query=query_check)
+
+    if exists_check is None:
         print('--- No followers, starting from zero ---')
+        from tweetcore.models import MetaFollowers, TwUsers
+        user = TwUsers.objects.get(tw_id=tw_id)
+        meta_follower = MetaFollowers(tw_user=user)
+        meta_follower.last_follower = '-999'
+        meta_follower.following_position = -999
+        meta_follower.is_all_history_done = False
+        meta_follower.save()
+
         followers = users_master.reconstruct_follower_history(configuration=configuration,
                                                               tw_id=tw_id,
                                                               cursor=-1,
@@ -57,13 +68,28 @@ def update_followers(configuration: dict = None,
         for j in range(len(followers)):
             follower_id = str(followers[j])
             position = start - sentinel
-            export_follower(tw_id=follower_id,
-                            following_tw_id=tw_id,
-                            position=position)
-            sentinel += 1
+            try:
+                export_follower(tw_id=follower_id,
+                                following_tw_id=tw_id,
+                                position=position)
+                sentinel += 1
+            except:
+                query_update = f'''
+                UPDATE tweetcore_metafollowers
+                SET last_follower = {str(followers[j - 1])},
+                following_position = {str(position - 1)},
+                is_all_history_done = false
+                WHERE tw_user_id = (select id
+                                    from tweetcore_twusers
+                                    where tw_id = '{tw_id}')
+                '''
+                execute_query.execute_postgre_query(configuration=configuration,
+                                                    query=query_update)
+                break
+
         print(f'--- Added {str(sentinel)} followers ---')
         pass
-    else:
+    elif exists_check["is_all_history_done"].values[0]:
         print('--- Adding new followers ---')
         followers = users_master.get_user_followers(configuration=configuration,
                                                     tw_id=tw_id,
@@ -98,6 +124,52 @@ def update_followers(configuration: dict = None,
             print(f'--- Added {str(sentinel)} followers ---')
         else:
             print('--- No new followers ---')
+
+    else:
+        print('--- Finishing all history ---')
+        all_followers = users_master.reconstruct_follower_history(configuration=configuration,
+                                                                  tw_id=tw_id,
+                                                                  cursor=-1,
+                                                                  count=5000)
+        last_follower = exists_check["last_follower"].values[0]
+        last_position = all_followers.index(last_follower)
+        followers = all_followers[last_position:]
+        print(f'--- {str(len(followers))} to be updated ---')
+        print(last_position, exists_check["following_position"].values[0])
+        sentinel = 0
+        for j in range(len(followers)):
+            follower_id = str(followers[j])
+            position = exists_check["following_position"].values[0] - sentinel
+            try:
+                export_follower(tw_id=follower_id,
+                                following_tw_id=tw_id,
+                                position=position)
+                sentinel += 1
+            except:
+                query_update = f'''
+                UPDATE tweetcore_metafollowers
+                SET last_follower = {str(followers[j - 1])},
+                following_position = {str(position - 1)},
+                is_all_history_done = false
+                WHERE tw_user_id = (select id
+                                    from tweetcore_twusers
+                                    where tw_id = '{tw_id}')
+                '''
+                execute_query.execute_postgre_query(configuration=configuration,
+                                                    query=query_update)
+            if j == len(followers):
+                query_update = f'''
+                UPDATE tweetcore_metafollowers
+                SET last_follower = {str(followers)},
+                following_position = {str(position)},
+                is_all_history_done = true
+                WHERE tw_user_id = (select id
+                                    from tweetcore_twusers
+                                    where tw_id = '{tw_id}')
+                '''
+                execute_query.execute_postgre_query(configuration=configuration,
+                                                    query=query_update)
+            print(f'--- Added {str(sentinel)} followers ---')
 
 
 if __name__ == "__main__":

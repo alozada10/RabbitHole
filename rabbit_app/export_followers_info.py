@@ -38,14 +38,23 @@ def export_follower_info(configuration: dict = None) -> int:
         from tweetcore.models import TwUsers
         for follower_id in followers_update:
             user = TwUsers.objects.get(tw_id=follower_id)
-            user_info = users_master.get_user_info(configuration=configuration,
-                                                   tw_id=follower_id)
-            user.tw_screen = user_info['screen_name']
-            user.tw_account_created_at = user_info['created_at']
-            user.name = user_info['name']
-            user.protected = user_info['protected']
-            user.verified = user_info['verified']
-            user.save()
+            try:
+                user_info = users_master.get_user_info(configuration=configuration,
+                                                       tw_id=follower_id)
+                user.tw_screen = user_info['screen_name']
+                user.tw_account_created_at = user_info['created_at']
+                user.name = user_info['name']
+                user.protected = user_info['protected']
+                user.verified = user_info['verified']
+                user.save()
+            except tp.TweepError as error:
+                if error.args[0][0]['code'] == 63:
+                    msg = error.args[0][0]['message']
+                    print(f'--- {follower_id} ---')
+                    print(f'--- {msg} ---')
+                    pass
+                else:
+                    raise
         print(f'--- {str(df_followers.shape[0])} of {str(problem_size)} ---')
     return problem_size
 
@@ -58,17 +67,9 @@ if __name__ == "__main__":
     conf = credentials_refactor.return_credentials()
 
     while True:
-        try:
-            sentinel = export_follower_info(configuration=conf)
-            print(f"--- %s minutes ---" % round((time.time() - start_time) / 60, 2))
-        except tp.TweepError as error:
-            if error.args[0][0]['code'] == 63:
-                msg = error.args[0][0]['message']
-                print(f'--- {msg} ---')
-                sentinel = -1
-                pass
-            else:
-                raise
+        sentinel = export_follower_info(configuration=conf)
+        print(f"--- %s minutes ---" % round((time.time() - start_time) / 60, 2))
+
         if sentinel == 0:
             break
         else:
