@@ -148,7 +148,7 @@ def write_postgre_table(configuration: dict = None,
                                          schema=schema,
                                          if_exists_then_wat='append')
             j += 1
-            print(f'{j}/{splits}')
+            print(f'--- {j}/{splits} ---')
     else:
         write_postgre_table_back(configuration=configuration,
                                  data=data,

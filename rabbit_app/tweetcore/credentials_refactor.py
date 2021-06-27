@@ -1,5 +1,6 @@
 def return_credentials() -> dict:
     from rabbit_app import credentials
+    #from rabbit_app.rabbit_app import credentials
     config = {
         "user": credentials.POSTGRES_USER,
         "password": credentials.POSTGRES_PASSWORD,

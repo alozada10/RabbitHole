@@ -12,7 +12,9 @@ def export_follower_info(configuration: dict = None) -> int:
     select tw_id
     from tweetcore_twusers
     where tw_screen = '-999'
-    and name = '-999'
+    or name = '-999'
+    or extract(year from tw_account_created_at) = 1999 
+    order by random ()
     limit 900
     '''
 
@@ -20,7 +22,8 @@ def export_follower_info(configuration: dict = None) -> int:
         select count(0) as count
         from tweetcore_twusers
         where tw_screen = '-999'
-        and name = '-999'
+        or name = '-999'
+        or extract(year from tw_account_created_at) = 1999
         '''
 
     df_followers = download_data.pandas_df_from_postgre_query(configuration=configuration,
@@ -28,7 +31,7 @@ def export_follower_info(configuration: dict = None) -> int:
     df_latency = download_data.pandas_df_from_postgre_query(configuration=configuration,
                                                             query=query_latency)
     problem_size = df_latency["count"].values[0]
-
+    balance = 0
     if problem_size == 0:
         print('--- No followers to update ---')
         pass
@@ -48,15 +51,16 @@ def export_follower_info(configuration: dict = None) -> int:
                 user.verified = user_info['verified']
                 user.save()
             except tp.TweepError as error:
-                if error.args[0][0]['code'] == 63:
+                if error.args[0][0]['code'] in [63, 50, 131]:
                     msg = error.args[0][0]['message']
                     print(f'--- {follower_id} ---')
                     print(f'--- {msg} ---')
+                    balance += 1
                     pass
                 else:
                     raise
         print(f'--- {str(df_followers.shape[0])} of {str(problem_size)} ---')
-    return problem_size
+    return problem_size - balance
 
 
 if __name__ == "__main__":

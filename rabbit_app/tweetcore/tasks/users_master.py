@@ -36,9 +36,8 @@ def follower_exists(configuration: dict = None,
                                select count(0) as count
                                from tweetcore_followers
                                where following_tw_id = '{following_tw_id}'
-                               and tw_user_id = coalesce((select id
-                                                 from tweetcore_twusers
-                                                 where tw_id = '{tw_id}'),-999)'''
+                               and tw_id = '{tw_id}'
+               '''
     rows_f = download_data.pandas_df_from_postgre_query(configuration=configuration,
                                                         query=query_f)["count"].values[0]
 
@@ -56,12 +55,16 @@ def get_user_number_followers(configuration: dict = None,
 def get_user_followers(configuration: dict = None,
                        tw_id: str = None,
                        first_time: bool = False,
-                       cursor: int = -1) -> list:
+                       count: int = 5000,
+                       cursor: int = -1,
+                       sentinel: int = 0) -> list:
     api = tc.get_client(configuration=configuration,
                         wait_on_rate_limit=True)
 
     temp_followers, next_batch = api.followers_ids(user_id=tw_id,
-                                                   cursor=cursor)
+                                                   cursor=cursor,
+                                                   stringify_ids=True,
+                                                   count=count)
     if first_time:
         return temp_followers
     else:
@@ -72,13 +75,17 @@ def get_user_followers(configuration: dict = None,
                                  following_tw_id=tw_id)
         if exists:
             return temp_followers
+
+        if sentinel == 3:
+            return temp_followers
         else:
             print('--- batch ---')
             print('--- latency O.K ---')
             return temp_followers + get_user_followers(configuration=configuration,
                                                        tw_id=tw_id,
-                                                       cursor=next_batch[1])
-            pass
+                                                       cursor=next_batch[1],
+                                                       count=count,
+                                                       sentinel=sentinel+1)
 
 
 def reconstruct_follower_history(configuration: dict = None,

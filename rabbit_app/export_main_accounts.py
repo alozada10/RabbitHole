@@ -25,12 +25,13 @@ def export_user(configuration: dict = None,
     user.save()
 
 
-def export_follower_init(tw_id: str = None):
-
+def export_followers_init(tw_ids: list = None):
     from tweetcore.models import TwUsers
-    user = TwUsers()
-    user.tw_id = tw_id
-    user.save()
+    export = []
+    for tw_id in tw_ids:
+        user = TwUsers(tw_id=tw_id)
+        export.append(user)
+    TwUsers.objects.bulk_create(export)
 
 
 if __name__ == "__main__":

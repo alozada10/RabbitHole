@@ -63,6 +63,7 @@ def update_followers(configuration: dict = None,
                                                               tw_id=tw_id,
                                                               cursor=-1,
                                                               count=5000)
+
         print(f'--- {str(len(followers))} to be updated ---')
         sentinel = 0
         for j in range(len(followers)):
@@ -74,27 +75,45 @@ def update_followers(configuration: dict = None,
                                 position=position)
                 sentinel += 1
             except:
+                print('--- error ---')
                 query_update = f'''
                 UPDATE tweetcore_metafollowers
-                SET last_follower = {str(followers[j - 1])},
-                following_position = {str(position - 1)},
+                SET last_follower = {follower_id},
+                following_position = {str(position)},
                 is_all_history_done = false
+                WHERE tw_user_id = (select id
+                                    from tweetcore_twusers
+                                    where tw_id = '{tw_id}')
+                '''
+
+                execute_query.execute_postgre_query(configuration=configuration,
+                                                    query=query_update)
+                print('--- Check point saved ---')
+                break
+
+            if j == len(followers)-1:
+                print('--- done ---')
+                query_update = f'''
+                UPDATE tweetcore_metafollowers
+                SET last_follower = {follower_id},
+                following_position = {str(position)},
+                is_all_history_done = true
                 WHERE tw_user_id = (select id
                                     from tweetcore_twusers
                                     where tw_id = '{tw_id}')
                 '''
                 execute_query.execute_postgre_query(configuration=configuration,
                                                     query=query_update)
-                break
 
         print(f'--- Added {str(sentinel)} followers ---')
-        pass
+
     elif exists_check["is_all_history_done"].values[0]:
         print('--- Adding new followers ---')
         followers = users_master.get_user_followers(configuration=configuration,
                                                     tw_id=tw_id,
                                                     first_time=False)
-        df_followers = pd.DataFrame(data={'followers': followers})
+        df_followers = pd.DataFrame(data={'followers': followers, 'dummy': [1]*len(followers)})
+
         upload_data.write_postgre_table(configuration=configuration,
                                         data=df_followers,
                                         table_name='temp_new_followers',
@@ -146,10 +165,11 @@ def update_followers(configuration: dict = None,
                                 position=position)
                 sentinel += 1
             except:
+                print('--- error ---')
                 query_update = f'''
                 UPDATE tweetcore_metafollowers
-                SET last_follower = {str(followers[j - 1])},
-                following_position = {str(position - 1)},
+                SET last_follower = {follower_id},
+                following_position = {str(position)},
                 is_all_history_done = false
                 WHERE tw_user_id = (select id
                                     from tweetcore_twusers
@@ -157,10 +177,13 @@ def update_followers(configuration: dict = None,
                 '''
                 execute_query.execute_postgre_query(configuration=configuration,
                                                     query=query_update)
+                print('--- Check point saved ---')
+                break
             if j == len(followers):
+                print('--- done ---')
                 query_update = f'''
                 UPDATE tweetcore_metafollowers
-                SET last_follower = {str(followers)},
+                SET last_follower = {follower_id},
                 following_position = {str(position)},
                 is_all_history_done = true
                 WHERE tw_user_id = (select id

@@ -1,0 +1,10 @@
+psycopg2~=2.8.6
+sqlalchemy~=1.4.15
+django~=3.2.3
+
+pandas~=1.2.4
+numpy~=1.20.3
+unidecode~=1.2.0
+
+tweepy~=3.10.0
+spacy~=3.0.6
