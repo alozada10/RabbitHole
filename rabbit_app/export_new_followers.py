@@ -25,7 +25,7 @@ def check_users_exists(tw_ids: list = None) -> list:
 
 
 def export_followers(users: dict = None,
-                     date: datetime.date = datetime.today().date()):
+                     date: datetime.date = datetime.now()):
     from tweetcore.models import Followers
     new_users = check_users_exists(tw_ids=list(users.keys()))
 
@@ -66,9 +66,10 @@ def update_followers(configuration: dict = None,
         print(f'--- {str(len(followers))} to be updated ---')
         export = {}
         sentinel = 0
-        for j in range(len(followers)):
-            follower_id = str(followers[j])
-            position = start - sentinel
+        size_followers = len(followers)
+        for j in range(1, size_followers + 1):
+            follower_id = str(followers[size_followers - j])
+            position = start - size_followers + sentinel + 1
             temp = {'following_tw_id': str(tw_id),
                     'following_position': position}
             export[str(follower_id)] = temp
@@ -87,7 +88,7 @@ def update_followers(configuration: dict = None,
                     select tw_id
                     from tweetcore_followers
                     where following_tw_id = '{tw_id}'
-                    and tw_id in {str(followers).replace('[','(').replace(']',')')}
+                    and tw_id in {str(followers).replace('[', '(').replace(']', ')')}
         '''
 
         old_followers = download_data.pandas_df_from_postgre_query(configuration=configuration,
@@ -96,14 +97,14 @@ def update_followers(configuration: dict = None,
             new_followers = followers
         else:
             new_followers = [fi for fi in followers if fi not in old_followers["tw_id"].values]
-
         sentinel = 0
+        size_followers = len(new_followers)
         if len(new_followers) > 0:
             print(f'--- {str(len(new_followers))} to be updated ---')
             export = {}
-            for j in range(len(new_followers)):
-                follower_id = str(new_followers[j])
-                position = start - sentinel
+            for j in range(1, size_followers+1):
+                follower_id = str(new_followers[size_followers - j])
+                position = start - size_followers + sentinel + 1
                 temp = {'following_tw_id': str(tw_id),
                         'following_position': position}
                 export[str(follower_id)] = temp
